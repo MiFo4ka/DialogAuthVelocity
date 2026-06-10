@@ -1,6 +1,7 @@
 # DialogAuthVelocity
 
 Addon for /license (premium) command that allows to connect premium players with online-mode without typing password
+**check also:** [DialogAuth](https://github.com/MiFo4ka/DialogAuth) - required
 
 ## Features
 * **Multi-Database Support:** MySQL, H2, and PostgreSQL.
@@ -25,4 +26,4 @@ https://github.com/user-attachments/assets/b53027c0-6839-457a-aff7-b82c6e5975e2
 5. **Verify the Setup:** Start (or restart) both servers and ensure that the connection between the Velocity and Paper plugins is successfully established.
 
 ## License
-DialogAuth is licensed under the **GNU GPLv3** license. See the [LICENSE](LICENSE) file for more details.
+DialogAuthVelocity is licensed under the **GNU GPLv3** license. See the [LICENSE](LICENSE) file for more details.
