@@ -24,4 +24,5 @@ https://github.com/user-attachments/assets/b53027c0-6839-457a-aff7-b82c6e5975e2
    > *Note: If your Velocity proxy is hosted on a different server/machine, make sure to specify the public IP address of your Paper server.*
 5. **Verify the Setup:** Start (or restart) both servers and ensure that the connection between the Velocity and Paper plugins is successfully established.
 
-
+## License
+DialogAuth is licensed under the **GNU GPLv3** license. See the [LICENSE](LICENSE) file for more details.
