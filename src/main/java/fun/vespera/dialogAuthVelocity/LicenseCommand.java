@@ -82,19 +82,31 @@ public class LicenseCommand implements SimpleCommand {
     }
 
     // asking paper plugin to change isPremium in his db
-    // why whe dont connect directly to db? because it will broke h2(local db type) support
+    // why we dont connect directly to db? because it will broke h2(local db type) support
     private CompletableFuture<Boolean> setPremiumViaAPI(String username, boolean status) {
         String host = plugin.getConfig().node("api", "host").getString("0.0.0.0");
         int port = plugin.getConfig().node("api", "port").getInt(8080);
+        String token = plugin.getConfig().node("api", "token").getString("");
 
         return CompletableFuture.supplyAsync(() -> {
             try {
+                // Building our POST request body
+                String requestBody = "username=" + username + "&status=" + status;
+
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://" + host + ":" + port + "/api/setPremium?username=" + username + "&status=" + status))
-                        .GET()
+                        .uri(URI.create("http://" + host + ":" + port + "/api/setPremium"))
+                        .header("Authorization", "Bearer " + token)
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                         .build();
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() == 401) {
+                    plugin.getLogger().error("Unauthorized API request, check if API-tokens matches in Paper and Velocity configs");
+                    return false;
+                }
+
                 return response.statusCode() == 200 && "success".equals(response.body());
             } catch (Exception e) {
                 plugin.getLogger().error("Cant connect to API, check plugin settings", e);

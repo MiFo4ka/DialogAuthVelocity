@@ -1,5 +1,6 @@
 package fun.vespera.dialogAuthVelocity;
 
+import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
@@ -23,32 +24,39 @@ public class LoginListener {
     }
 
     @Subscribe
-    public void onPreLogin(PreLoginEvent event) {
-        String username = event.getUsername();
+    public EventTask onPreLogin(PreLoginEvent event) {
+        return EventTask.async(() -> {
+            String username = event.getUsername();
+            String host = plugin.getConfig().node("api", "host").getString("0.0.0.0");
+            int port = plugin.getConfig().node("api", "port").getInt(8080);
+            String token = plugin.getConfig().node("api", "token").getString("");
 
-        String host = plugin.getConfig().node("api", "host").getString("0.0.0.0");
-        int port = plugin.getConfig().node("api", "port").getInt(8080);
+            // asking paper plugin: is this player set /license?
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("http://" + host + ":" + port + "/api/isPremium?username=" + username))
+                        .header("Authorization", "Bearer " + token)
+                        .GET()
+                        .build();
 
-        // asking paper plugin: is this player set /license?
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://" + host + ":" + port + "/api/isPremium?username=" + username))
-                    .GET()
-                    .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            // forcing player to join with online-mode with session check
-            if ("true".equalsIgnoreCase(response.body())) {
-                event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
-                return;
+                // forcing player to join with online-mode with session check
+                if (response.statusCode() == 200 && "true".equalsIgnoreCase(response.body())) {
+                    event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+                    return;
+                } else if (response.statusCode() == 401) {
+                    plugin.getLogger().error("Unauthorized API request, check if API-tokens matches in Paper and Velocity configs");
+                    event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode()); // setting online-mode anyway, to prevent unauthorized login on server
+                    return;
+                }
+            } catch (Exception e) {
+                plugin.getLogger().error("Cant connect to API to check: " + username, e);
             }
-        } catch (Exception e) {
-            plugin.getLogger().error("Cant connect to API, to check: " + username, e);
-        }
 
-        // leave as is
-        event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+            // leave as is
+            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+        });
     }
 
     // spoofing UUID
