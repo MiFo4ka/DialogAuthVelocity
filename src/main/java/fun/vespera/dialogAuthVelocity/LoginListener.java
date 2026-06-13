@@ -31,10 +31,12 @@ public class LoginListener {
             int port = plugin.getConfig().node("api", "port").getInt(8080);
             String token = plugin.getConfig().node("api", "token").getString("");
 
+            String ip = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
+
             // asking paper plugin: is this player set /license?
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("http://" + host + ":" + port + "/api/isPremium?username=" + username))
+                        .uri(URI.create("http://" + host + ":" + port + "/api/isPremium?username=" + username + "&ip=" + ip))
                         .header("Authorization", "Bearer " + token)
                         .GET()
                         .build();
